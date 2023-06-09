@@ -27,7 +27,13 @@ async function run() {
     await client.connect();
 
     const usersCollection = client.db("focusStudio").collection("users");
+    const classesCollection = client.db("focusStudio").collection("classes");
+    const instructorsCollection = client.db("focusStudio").collection("instructors");
 
+    app.get("/users", async(req, res) => {
+      const result = await usersCollection.find().toArray()
+      res.send(result)
+    })
     
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -39,6 +45,17 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
+    // classes
+    app.get("/classes", async(req, res) => {
+      const result = await classesCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.get("/instructors", async(req, res) => {
+      const result = await instructorsCollection.find().toArray()
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
