@@ -54,6 +54,9 @@ async function run() {
     const instructorsCollection = client
       .db("focusStudio")
       .collection("instructors");
+    const addToCartCollection = client
+      .db("focusStudio")
+      .collection("addToCart");
 
     //JWT
     app.post("/jwt", (req, res) => {
@@ -88,7 +91,7 @@ async function run() {
         res.send({ admin: false });
       }
 
-      const query = { email: email }; 
+      const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { admin: user?.role === "admin" };
       res.send(result);
@@ -100,7 +103,7 @@ async function run() {
       res.send(result);
     });
 
-    // Instructors 
+    // Instructors
     app.get("/instructors", async (req, res) => {
       const result = await instructorsCollection.find().toArray();
       res.send(result);
@@ -130,6 +133,37 @@ async function run() {
       };
       const result = await usersCollection.updateOne(filterId, updateDoc);
       res.send(result);
+    });
+
+    // add to cart api
+    app.get("/carts", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res.status(403).send({ error: true, message: "no access" });
+      }
+      const query = { email: email };
+      const result = await addToCartCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/carts", async (req, res) => {
+      const item = req.body;
+      const query = { id: item.id, email: item.email };
+      try {
+        const findItem = await addToCartCollection.find(query).toArray();
+        if (findItem.length === 0) {
+          const result = await addToCartCollection.insertOne(item);
+          res.send(result);
+        } else {
+          res.send(["you have all ready added"]);
+        }
+      } catch (error) {
+        console.log(error);
+      }
     });
 
     // Send a ping to confirm a successful connection
