@@ -97,6 +97,19 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ instructor: false });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === "instructor" };
+      res.send(result);
+    });
+
     // classes
     app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
@@ -164,6 +177,14 @@ async function run() {
       } catch (error) {
         console.log(error);
       }
+    });
+
+    // Delete add to cart
+    app.delete("/carts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await addToCartCollection.deleteOne(query);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
