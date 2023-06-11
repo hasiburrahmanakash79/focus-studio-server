@@ -52,6 +52,7 @@ async function run() {
 
     const usersCollection = client.db("focusStudio").collection("users");
     const classesCollection = client.db("focusStudio").collection("classes");
+    const paymentCollection = client.db("focusStudio").collection("payments");
     const instructorsCollection = client
       .db("focusStudio")
       .collection("instructors");
@@ -206,6 +207,16 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    })
+
+    app.post('/payments', verifyJWT, async(req, res) =>{
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment)
+
+      const query = { _id: { $in: payment.classID.map(id => new ObjectId(id)) } }
+      const deleteResult = await addToCartCollection.deleteMany(query)
+
+      res.send({ insertResult, deleteResult });
     })
 
     // Send a ping to confirm a successful connection
