@@ -4,7 +4,7 @@ jwt = require("jsonwebtoken");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
-const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY)
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // Middle ware
@@ -119,11 +119,11 @@ async function run() {
     });
 
     // instructor can add class
-    app.post("/classes", async(req, res) => {
-      const addClass = req.body
-      const result = await classesCollection.insertOne(addClass)
-      res.send(result)
-    })
+    app.post("/classes", async (req, res) => {
+      const addClass = req.body;
+      const result = await classesCollection.insertOne(addClass);
+      res.send(result);
+    });
 
     // Instructors
     app.get("/instructors", async (req, res) => {
@@ -196,28 +196,42 @@ async function run() {
       res.send(result);
     });
 
-    app.post('/create-payment-intent', verifyJWT, async(req, res) => {
-      const {price} = req.body;
-      const amount = price*100;
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
-        payment_method_types: ['card']
-      })
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
-    })
+    });
 
-    app.post('/payments', verifyJWT, async(req, res) =>{
+    app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
-      const insertResult = await paymentCollection.insertOne(payment)
+      console.log(payment);
+      const insertResult = await paymentCollection.insertOne(payment);
 
-      const query = { _id: { $in: payment.classID.map(id => new ObjectId(id)) } }
-      const deleteResult = await addToCartCollection.deleteMany(query)
+      const query = { _id: new ObjectId(payment.classID) };
+      const deleteResult = await addToCartCollection.deleteOne(query);
 
       res.send({ insertResult, deleteResult });
-    })
+    });
+
+    app.put("/payment_update/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const updateDoc = {
+        $inc: { available_seat: -1 },
+      };
+      const findClass = await classesCollection.updateOne(query, updateDoc)
+        console.log(findClass);
+      res.send(findClass);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
