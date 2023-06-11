@@ -48,7 +48,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const usersCollection = client.db("focusStudio").collection("users");
     const classesCollection = client.db("focusStudio").collection("classes");
@@ -69,11 +69,13 @@ async function run() {
       res.send({ token });
     });
 
+    // get all user
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
+    // login user insert in database
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -92,23 +94,30 @@ async function run() {
       if (req.decoded.email !== email) {
         res.send({ admin: false });
       }
-
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { admin: user?.role === "admin" };
       res.send(result);
     });
 
+    // find instructor from database
     app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
         res.send({ instructor: false });
       }
-
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { instructor: user?.role === "instructor" };
+      res.send(result);
+    });
+
+    // delete user from database
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
 
@@ -172,6 +181,7 @@ async function run() {
       res.send(result);
     });
 
+    // add to cart class
     app.post("/carts", async (req, res) => {
       const item = req.body;
       const query = { id: item.id, email: item.email };
@@ -196,6 +206,7 @@ async function run() {
       res.send(result);
     });
 
+    // payment system
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = price * 100;
@@ -220,6 +231,18 @@ async function run() {
       res.send({ insertResult, deleteResult });
     });
 
+
+    // -----------------------------------------------------
+    app.get("/payments/:email", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.put("/payment_update/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
@@ -228,8 +251,8 @@ async function run() {
       const updateDoc = {
         $inc: { available_seat: -1 },
       };
-      const findClass = await classesCollection.updateOne(query, updateDoc)
-        console.log(findClass);
+      const findClass = await classesCollection.updateOne(query, updateDoc);
+      console.log(findClass);
       res.send(findClass);
     });
 
