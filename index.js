@@ -53,6 +53,9 @@ async function run() {
     const usersCollection = client.db("focusStudio").collection("users");
     const classesCollection = client.db("focusStudio").collection("classes");
     const paymentCollection = client.db("focusStudio").collection("payments");
+    const paymentHistoryCollection = client
+      .db("focusStudio")
+      .collection("paymentHistory");
     const instructorsCollection = client
       .db("focusStudio")
       .collection("instructors");
@@ -131,6 +134,17 @@ async function run() {
     app.post("/classes", async (req, res) => {
       const addClass = req.body;
       const result = await classesCollection.insertOne(addClass);
+      res.send(result);
+    });
+
+    // Find classes for individual email 
+    app.get("/classes/:email", async (req, res) => {
+      const email = req.params.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await classesCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -226,23 +240,24 @@ async function run() {
       const insertResult = await paymentCollection.insertOne(payment);
 
       const query = { _id: new ObjectId(payment.classID) };
+      const insertHistory = await paymentHistoryCollection.insertOne(payment);
       const deleteResult = await addToCartCollection.deleteOne(query);
 
-      res.send({ insertResult, deleteResult });
+      res.send({ insertResult, insertHistory, deleteResult });
     });
 
-
-    // -----------------------------------------------------
-    app.get("/payments/:email", async (req, res) => {
-      const email = req.query.email;
+    // payment History
+    app.get("/history/:email", async (req, res) => {
+      const email = req.params.email;
       if (!email) {
         res.send([]);
       }
       const query = { email: email };
-      const result = await paymentCollection.find(query).toArray();
+      const result = await paymentHistoryCollection.find(query).toArray();
       res.send(result);
     });
 
+    // update payment and increase available seat
     app.put("/payment_update/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
