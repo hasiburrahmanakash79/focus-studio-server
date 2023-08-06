@@ -73,13 +73,13 @@ async function run() {
     });
 
     // get all user
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
     // login user insert in database
-    app.post("/users", async (req, res) => {
+    app.post("/users",  async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
@@ -147,6 +147,14 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     });
+
+    app.get("/classes/status/pending" , async(req, res) =>{
+      const status = "pending"
+      const query = {status: status}
+      console.log(query);
+      const result = await classesCollection.find(query).toArray()
+      res.send(result)
+     })
 
     // Instructors
     app.get("/instructors", async (req, res) => {
@@ -247,7 +255,7 @@ async function run() {
     });
 
     // payment History
-    app.get("/history/:email", async (req, res) => {
+    app.get("/history/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       if (!email) {
         res.send([]);
@@ -258,7 +266,7 @@ async function run() {
     });
 
     // update payment and increase available seat
-    app.put("/payment_update/:id", async (req, res) => {
+    app.put("/payment_update/:id",  async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
