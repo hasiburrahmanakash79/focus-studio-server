@@ -272,13 +272,15 @@ async function run() {
 
     app.patch("/history/:id", async (req, res) => {
       const id = req.params.id;
+      console.log(id);
       const filterId = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
           certificate: "yes",
         },
       };
-      const result = await usersCollection.updateOne(filterId, updateDoc);
+      console.log(updateDoc);
+      const result = await paymentHistoryCollection.updateOne(filterId, updateDoc);
       res.send(result);
     });
 
