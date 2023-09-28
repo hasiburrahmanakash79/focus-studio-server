@@ -148,7 +148,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/classes/status/pending" , async(req, res) =>{
+    app.get("/status/pending" , async(req, res) =>{
       const status = "pending"
       const query = {status: status}
       console.log(query);
@@ -262,6 +262,23 @@ async function run() {
       }
       const query = { email: email };
       const result = await paymentHistoryCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/history",  async (req, res) => {
+      const result = await paymentHistoryCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.patch("/history/:id", async (req, res) => {
+      const id = req.params.id;
+      const filterId = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          certificate: "yes",
+        },
+      };
+      const result = await usersCollection.updateOne(filterId, updateDoc);
       res.send(result);
     });
 
