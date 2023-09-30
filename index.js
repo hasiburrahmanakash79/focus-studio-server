@@ -73,7 +73,7 @@ async function run() {
     });
 
     // get all user
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users",  async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -229,7 +229,7 @@ async function run() {
     });
 
     // payment system
-    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+    app.post("/create-payment-intent",  async (req, res) => {
       const { price } = req.body;
       const amount = price * 100;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -242,7 +242,7 @@ async function run() {
       });
     });
 
-    app.post("/payments", verifyJWT, async (req, res) => {
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       console.log(payment);
       const insertResult = await paymentCollection.insertOne(payment);
@@ -255,13 +255,21 @@ async function run() {
     });
 
     // payment History
-    app.get("/history/:email", verifyJWT, async (req, res) => {
+    app.get("/history/:email", async (req, res) => {
       const email = req.params.email;
       if (!email) {
         res.send([]);
       }
       const query = { email: email };
       const result = await paymentHistoryCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/history/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentHistoryCollection.findOne(query);
       res.send(result);
     });
 
