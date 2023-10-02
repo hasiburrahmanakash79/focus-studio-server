@@ -148,13 +148,17 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/status/pending" , async(req, res) =>{
-      const status = "pending"
-      const query = {status: status}
-      console.log(query);
-      const result = await classesCollection.find(query).toArray()
-      res.send(result)
-     })
+    app.patch('/classes/approve/:id', async(req, res) => {
+      const id = req.params.id;
+      const filterID = { _id: new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        }
+      }
+      const result = await classesCollection.updateOne(filterID, updateDoc);
+      res.send(result);
+    });
 
     // Instructors
     app.get("/instructors", async (req, res) => {
