@@ -160,6 +160,13 @@ async function run() {
       res.send(result);
     });
 
+    app.delete('/classes/:id', async(req, res) => {
+      const id = req.params.id;
+      const deleteID = {_id: new ObjectId(id)}
+      const result = await classesCollection.deleteOne(deleteID)
+      res.send(result)
+    })
+
     // Instructors
     app.get("/instructors", async (req, res) => {
       const result = await instructorsCollection.find().toArray();
