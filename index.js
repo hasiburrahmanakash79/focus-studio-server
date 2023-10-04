@@ -53,6 +53,7 @@ async function run() {
     const usersCollection = client.db("focusStudio").collection("users");
     const classesCollection = client.db("focusStudio").collection("classes");
     const paymentCollection = client.db("focusStudio").collection("payments");
+    const blogsCollection = client.db("focusStudio").collection("blogs");
     const paymentHistoryCollection = client
       .db("focusStudio")
       .collection("paymentHistory");
@@ -166,6 +167,12 @@ async function run() {
       const result = await classesCollection.deleteOne(deleteID)
       res.send(result)
     })
+
+    // BLOGS
+    app.get("/blogs", async (req, res) => {
+      const result = await blogsCollection.find().toArray();
+      res.send(result);
+    });
 
     // Instructors
     app.get("/instructors", async (req, res) => {
