@@ -174,6 +174,13 @@ async function run() {
       res.send(result);
     });
 
+    // instructor can add blogs
+    app.post("/blogs", async (req, res) => {
+      const addBlog = req.body;
+      const result = await blogsCollection.insertOne(addBlog);
+      res.send(result);
+    });
+
     // Instructors
     app.get("/instructors", async (req, res) => {
       const result = await instructorsCollection.find().toArray();
