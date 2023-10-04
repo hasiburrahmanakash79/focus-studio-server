@@ -53,6 +53,7 @@ async function run() {
     const usersCollection = client.db("focusStudio").collection("users");
     const classesCollection = client.db("focusStudio").collection("classes");
     const paymentCollection = client.db("focusStudio").collection("payments");
+    const blogsCollection = client.db("focusStudio").collection("blogs");
     const paymentHistoryCollection = client
       .db("focusStudio")
       .collection("paymentHistory");
@@ -73,13 +74,13 @@ async function run() {
     });
 
     // get all user
-    app.get("/users", async (req, res) => {
+    app.get("/users",  async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
     // login user insert in database
-    app.post("/users", async (req, res) => {
+    app.post("/users",  async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
@@ -145,6 +146,38 @@ async function run() {
       }
       const query = { email: email };
       const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.patch('/classes/approve/:id', async(req, res) => {
+      const id = req.params.id;
+      const filterID = { _id: new ObjectId(id)}
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        }
+      }
+      const result = await classesCollection.updateOne(filterID, updateDoc);
+      res.send(result);
+    });
+
+    app.delete('/classes/:id', async(req, res) => {
+      const id = req.params.id;
+      const deleteID = {_id: new ObjectId(id)}
+      const result = await classesCollection.deleteOne(deleteID)
+      res.send(result)
+    })
+
+    // BLOGS
+    app.get("/blogs", async (req, res) => {
+      const result = await blogsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // instructor can add blogs
+    app.post("/blogs", async (req, res) => {
+      const addBlog = req.body;
+      const result = await blogsCollection.insertOne(addBlog);
       res.send(result);
     });
 
@@ -221,7 +254,7 @@ async function run() {
     });
 
     // payment system
-    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+    app.post("/create-payment-intent",  async (req, res) => {
       const { price } = req.body;
       const amount = price * 100;
       const paymentIntent = await stripe.paymentIntents.create({
@@ -234,7 +267,7 @@ async function run() {
       });
     });
 
-    app.post("/payments", verifyJWT, async (req, res) => {
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       console.log(payment);
       const insertResult = await paymentCollection.insertOne(payment);
@@ -257,8 +290,35 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/history/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentHistoryCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/history",  async (req, res) => {
+      const result = await paymentHistoryCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.patch("/history/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filterId = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          certificate: "yes",
+        },
+      };
+      console.log(updateDoc);
+      const result = await paymentHistoryCollection.updateOne(filterId, updateDoc);
+      res.send(result);
+    });
+
     // update payment and increase available seat
-    app.put("/payment_update/:id", async (req, res) => {
+    app.put("/payment_update/:id",  async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
